@@ -1,0 +1,706 @@
+//オブジェクト型の合併型の明示的型付け
+type PoemWithPage ={
+    name: string;
+    pages:number;
+};
+
+type PoemWithRhymes={
+    name:string;
+    rhymes:boolean;
+};
+type Poem = PoemWithPage | PoemWithRhymes;
+
+const poem = Math.random() > 0.5 ? {
+    name: "The Double image",
+    pages: 32,
+} :{
+    name :"bakibaki DT desu",
+    rhymes:true,
+}satisfies Poem;
+//オブジェクト型の絞り込み
+if("pages" in poem){
+    poem.pages;
+}else{
+    poem.rhymes;
+}
+//タグ付き合併型
+type PoemWithPaper = {
+    name:string;
+    paper:number;
+    type:"paper";
+};
+type PoemWithRap ={
+    name:string;
+    rap:boolean;
+    type:"rap";
+}
+
+type TagPoem = PoemWithPaper|PoemWithRap;
+const poem2: TagPoem = Math.random() > 0.5 ?{
+    name:"aaaaa",
+    paper:21,
+    type:"paper",
+}:{
+    name:"assdsa",
+    rap:true,
+    type:"rap"
+};
+if(poem2.type === "rap"){
+    poem2.rap;
+}else{
+    poem2.paper;
+}
+//交差型
+type Artwork = {
+    genre: string;
+    name:string;
+};
+type Writings ={
+    name:string;
+    pages:number;
+};
+type WrittenArt = Artwork & Writings;
+//これは次と同じ
+//{
+//genre:string;
+//name:string;
+//pages:number;
+//}
+
+//交差型と合併型の組み合わせ
+type ShortPoemBase = {author:string};
+type Haiku = ShortPoemBase & {kigo:string; type:"haiku"};
+type Villanelle = ShortPoemBase & {meter:number; type:"villanelle"};
+type ShortPoem = Haiku | Villanelle;
+
+
+//レストパラメータ-
+function singAllSongs(singer:string, ...songs:string[]){
+    for(const song of songs){
+        console.log(`${song},by${singer}`);
+    }
+}
+ //明示的な戻り値の型
+ function singSong(songs:string[],count = 0):number{
+    return songs.length? singSong(songs.slice(1),count + 1):count;
+ }
+//アロー関数の場合
+const singSongArrow = (songs:string[],count=0):number =>
+songs.length ? singSongArrow(songs.slice(1),count+1) : count;
+
+//関数の型
+//パラメーターがなくstringを返す関数
+let nothingInGivesString: ()=> string;
+//
+let inputAndOutput:(songs:string[],count?:number)=> number;
+
+const songs = ["Juice","Shake it off","unravel"];
+function runOnSongs(getSongAt:(index:number)=>string){
+    for(let i = 0; i < songs.length; i++){
+        console.log(getSongAt(i));
+    }
+}
+function getSongAt(index:number){
+    return `${songs[index]}`;
+}
+runOnSongs(getSongAt);
+//関数型エイリアス
+type StringToNumber = (input:string) => number;
+let stringToNumber: StringToNumber;
+stringToNumber = (input) => input.length;
+//関数型のパラメーターを型エイリアスで型付け
+type NumberToString = (input:number) => string;
+//NumberToString型の関数がパラメーターということ↓
+function usesNumberToString(numberToString: NumberToString){
+    console.log(`The string is :${numberToString(1234)}`);
+}
+usesNumberToString((input) => `${input}! Hooray!`);
+//void type
+const records: string[] = [];
+
+function saveRecords(newRecords: string[]){
+    newRecords.forEach(record => records.push(record));
+    console.log(records);
+}
+saveRecords(["s","sa",'sddff']);
+//string|undefinedの合併型を返す関数
+let returnStringOrUndefined: () =>string|undefined;
+//型はstringを返す関数、またはundefined。この場合、関数自体が存在しない可能性があります
+let maybeReturnString: (() => string)|undefined;
+
+//関数のオーバーロード
+//overload signature
+function createDate(timestamp: number): Date;
+function createDate(month: number, day: number, year: number): Date;
+//implementaion signature、 全てのオーバーロードシグネチャと互換性をがあるパラメーターでなければならない
+function createDate(monthOrTimestamp: number,day?:number,year?:number){
+    return day === undefined || year === undefined ? new Date(monthOrTimestamp) : new Date(year,monthOrTimestamp,day);
+}
+//型の違いを理解する
+let createStrings:() => string[];
+let stringCreator: (() => string)[];
+
+let stringOfArrayOfNumbers: string|number[];
+let arrayOfStringOrNumbers: (string|number)[];
+
+//Type of (undefined|string)[]
+const nameListMaybe = [
+    "Aqua","Ruby",undefined,
+];
+//Multidimentional array
+let arrayOfArraysOfNumbers:number[][];//= (number[])[];とも表現できる
+arrayOfArraysOfNumbers = [[2,21,242],[23,55,432],[566,6,64,43]];
+
+//defender： string|Date type.
+const defenders = ["Marcho",'Syalor',new Date(2000,8,19)];
+const defender = defenders[1];
+//スプレッド演算子
+const soldiers = ["AmAko",'nezik','mario'];
+const soldierAges = [20,23,18];
+const conjoined = [...soldiers,...soldierAges];
+console.log(conjoined);
+//レストパラメータへの展開
+function logWarriors(greeting:string,...names:string[]){
+    for(const name of names){
+        console.log(`${greeting},${name}!`);
+    }
+}
+const warriors = ["Cathy","Masaki","henry"];
+logWarriors("hello",...warriors);
+//tuple type
+let yearAndWarrior: [number,string];
+//タプル型ならスプレッド演算子でパラメーターに渡せる
+function logPair(name:string,value:number){
+    console.log(`${name} has ${value}`);
+}
+const pairTuplecorrect:[string,number] = ["Akira",100];
+logPair(...pairTuplecorrect);
+//
+function logTrio(name:string,value:[number,boolean]){
+    console.log(`${name} has ${value[0]} (${value[1]})`);
+}
+const trios:[string,[number,boolean]][] = [
+    ["Akira",[1,true]],
+    ["Yuria",[2,true]],
+    ['Tj',[2,false]],
+] ;
+trios.forEach(trio => logTrio(...trio));
+//明示的なタプル型が関数の戻り値に
+function firstCharAndSizeExplicit(input:string): [string,number]{
+    return [input[0],input.length];
+}
+const [firstChar,size] = firstCharAndSizeExplicit("Cathey Williams");
+//as constアサーションで読み取り専用のタプルに
+function firstCharAndSizeAsConst(input:string){
+    return[input[0],input.length] as const;
+}
+const[firstChar2,size2] = firstCharAndSizeAsConst("Akira albanielie");
+
+
+//type alias of function
+type FunctionAlias = (input:string) => number;
+//call signature,矢印の代わりにコロン使う
+interface CallSignature{
+    (input:string):number;
+}
+
+const typedFunctionAlias : FunctionAlias = (input) => input.length;
+
+const typedCallSignature: CallSignature = (input) => input.length;
+
+//呼び出しシグネチャは定義したプロパティを持つ関数を記述できる
+interface FunctionWithCount{
+    count:number;
+    ():void;
+}
+let hasCallCount: FunctionWithCount;
+
+
+function keepsTrackOfCalls(){
+    keepsTrackOfCalls.count += 1;
+    console.log(`I have been called ${keepsTrackOfCalls.count} times!`);
+
+}
+keepsTrackOfCalls.count = 0;
+
+hasCallCount = keepsTrackOfCalls;
+
+hasCallCount();
+
+//index signature
+interface WordCounts {
+    [i:string] :number;
+}
+//↑キーの型　string　値の型number
+const words:WordCounts = {};
+words.apple = 1;
+words.banana =2;
+words.grape =3;
+console.log(words);
+
+//index signatureは完全に型安全ではない。任意のキーと値のペアを定義したいならMapが基本的に良い。
+interface DatesByName{
+    [i:string]:Date;
+}
+const publishDates:DatesByName = {
+    Apolo: new Date("1 August 2019"),
+};
+console.log(publishDates.Apolo.toString());
+//[LOG]: undefined,型システムをすり抜けている
+console.log(publishDates.FalseStory);
+
+//ネストされたインターフェース
+interface Comic{
+    author:{
+        name:string;
+    }
+    setting:Setting;
+}
+interface Setting{
+    place:string;
+    year:number;
+}
+let myComic:Comic;
+myComic = {
+    author:{
+        name:"Masaki Hirabayashi",
+    },
+    setting:{
+        place:"Tokyo",
+        year:2023,
+    }
+};
+//property & index signature
+interface HistoricalNovels{
+    Makuranosoushi:string;
+    [i:string]:string;
+}
+const clasicalJapanese :HistoricalNovels ={
+    Makuranosoushi:"Seisyou Nagon",
+    
+};
+//extended interface
+interface Writing{
+    title:string;
+}
+interface Novella extends Writing{
+    pages:number;
+}
+let myNovella: Novella ={
+    title:"abf",
+    pages:32,
+};
+//override
+interface WithNullableName{
+    name:string|null;
+}
+interface WithNonNullableName extends WithNullableName{
+    name:string;
+}
+//Multiple interface extensions
+interface GivesNumber{
+    giveNumber():number;
+}
+interface GiveString{
+    giveString():string;
+}
+interface GiveBothAndEither extends GiveString,GivesNumber{
+    giveEither():number|string;
+}
+function useGiveBoth(instance:GiveBothAndEither){
+    instance.giveEither();
+    instance.giveString();
+    instance.giveNumber();
+};
+//Merged interface
+interface Merged{
+    first:string;
+}
+interface Merged{
+    second:number;
+}
+/* the same as this: interface Merged{
+    first:string;
+    second:number;
+}
+*/
+class Greeter{
+    constructor(message:string){
+        console.log(`As I always say:${message}`);
+    }
+    greet(name:string){
+        console.log(`${name},do your stuff!`);
+    }
+}
+new Greeter("take chances, make mistakes,get messy").greet("Akira");
+//Class property
+class FieldTrip{
+    destination:string;
+
+    constructor(destination:string){
+        this.destination = destination;
+        console.log(`We are going to ${this.destination}`);
+    }
+}
+//！で厳格な初期化チェックを無効化
+class ActiveQueues{
+    pending!:string[];
+    initialize(pending:string[]){
+        this.pending = pending;
+    }
+    next(){
+        return this.pending.pop();
+    }
+}
+const activities = new ActiveQueues();
+activities.initialize(["wat","sleep"]);
+console.log(activities);
+
+//optional property
+class MissingInitializer{
+    property?:string;
+}
+new MissingInitializer().property?.length;
+//error: new MissingInitializer().property.length;
+
+/*Tells TypeScript whether a given instance of a class can be assigned to a given interface using implements*/
+interface Learner{
+    name:string;
+    study(hours: number):void;
+}
+class Student implements Learner{
+    name:string;
+    constructor(name:string){
+        this.name = name;
+    }
+    study(hours:number){
+        for(let i= 0; i< hours; i+=1){
+            console.log("...studying");
+        }
+    }
+}
+
+class Question{
+    protected static readonly answer = "bash";
+    protected static readonly prompt = "Affrgrhregergr";
+
+    guess(getAnswer: (prompt:string)=>string){
+        const answer=getAnswer(Question.prompt);
+        if(answer===Question.answer){
+            console.log("You got it!");
+        }else{
+            console.log("Try again...");
+        };
+    }
+}
+let q1 = new Question();
+console.log(q1);
+//型述語
+function isString(value: any): value is string {
+    return typeof value === "string";
+}
+/* ↑この関数はvalueという名前のパラメータを受け取ります。
+value is stringは型述語です。これは「もしこの関数がtrueを返したら、valueはstring型である」とTypeScriptに伝えます。
+関数の中身ではtypeof演算子を使って、valueが実際に文字列型かどうかをチェックします。*/
+
+
+/*関数内で肩の絞り込みを行なっても、関数外で情報は失われる。よって型述語（type predicate）を使用する。*/
+function isNumberOrSring(value:unknown): value is number| string{
+    return ['string','number'].includes(typeof value);
+}
+function logValueIfExists(value:number|string|null|undefined){
+    if(isNumberOrSring(value)){
+        value.toString();
+    }else{
+        console.log("value does not exist:",value);
+    }
+}
+//型述語練習
+interface Comedian{
+    funny: boolean;
+}
+interface StandupComedian extends Comedian{
+    routine: string;
+}
+function isStandupComedian(value: Comedian): value is StandupComedian{
+    return "routine" in value;
+}
+function workWithComedian(value: Comedian){
+    if(isStandupComedian(value)){
+        console.log(value.routine);
+    }
+}
+//keyof型演算子
+//keyof Ratingsを使用すると、'audience' | 'critics'という文字列リテラルのユニオン型が生成されます。
+/*keyof型演算子の利点
+型安全性の強化: keyofを使用すると、特定のオブジェクトのキーのみを参照する型を作成することができるため、存在しないキーを誤って参照するリスクを減らすことができます。
+リファクタリングの容易さ: オブジェクト型が変更された場合（プロパティが追加または削除された場合）、keyofを使用した型も自動的に更新されるため、関連するコードのリファクタリングが容易になります。
+ */
+interface Ratings {
+    audience:number;
+    critics:number;
+}
+const ratings: Ratings = {
+    audience:60,
+    critics:89,
+};
+function getRatingKeyOf(ratings: Ratings, key: keyof Ratings): number{
+    return ratings[key];
+}
+//typeof 型演算子
+const original = {
+    medium: "movie",
+    title:"Mean Girls"
+};
+let adaptation:typeof original;
+
+if(Math.random() > 0.5){
+    //originalをコピーした後、mediumを"play"に書き換え
+    adaptation = {...original,medium: "play"};
+}else{
+    //↑と同じく書き換え
+    adaptation = {...original,medium: "2"};
+}
+//typeof keyofを併用して明示的なインターフェースを持たないオブジェクトのキーを表す型が表現できる
+const rating = {
+    imdb: 6.4,
+    metacritic: 82,
+};
+function logRating(key: keyof typeof rating){
+    console.log(rating[key]);
+}
+logRating("imdb");
+//型アサーション
+const rawData = `["diashdoia","asphyxia"]`;
+JSON.parse(rawData);//any
+JSON.parse(rawData)as string[];//string[]
+
+//Generic conditional type
+type checkAgainstNumber<T> = T extends number ? true : false;
+//ジェネリックのTを受け取り、Tが関数かどうかチェックするp,280
+type callableSetting<T> = T extends () => any ? T : ()=> T;
+//条件型とジェネリック型の組み合わせ
+interface QueryOptions{
+    throwIfNotFound: boolean;
+}
+type QueryResult<Options extends QueryOptions> = Options["throwIfNotFound"] extends true? string : string|undefined;
+
+declare function retrieve <Options extends QueryOptions>(
+    key: string,
+    options?:Options,
+) : Promise<QueryResult<Options>>;
+//infer
+type ArrayItems<T> = T extends (infer Item)[]? Item:T;
+//inferを使って再帰的なジェネリック型にすることで、配列の要素型を所得することを適用し続けることができる
+type ArrayItemsRecursive<T> = T extends (infer Item)[]? ArrayItemsRecursive<Item> : T;
+//型述語を使って、ユーザー定義の型ガードを作る
+type User = {
+    username:string; 
+    address:{
+        zipcode: string;
+        town: string;
+}
+}
+const isUser = (arg:unknown): arg is User =>{
+    const u = arg as User;
+    return(
+        typeof u?.username === 'string' && typeof u?.address?.town === 'string' && typeof u?.address?.zipcode === 'string'
+     );
+    
+};
+/*const u1: unknown = JSON.parse('{}');
+const u2: unknown = JSON.parse(`{
+    "username":"Akira",
+    "address":{
+        "zipcode":"000-1132",
+        "town": "Asakusa",
+    }
+    }`
+    );
+    [u1,u2].forEach((u) =>{
+        if(isUser(u)){
+            console.log(`${u.username} is living in ${u.address.town}.`);
+        }else{
+            console.log("It's not User type.");
+        }
+    })
+    const rate: { [unit: string]: number } = {
+  USD: 1,
+  EUR: 0.9,
+  JPY: 108,
+  GBP: 0.8,
+};
+
+type Unit = keyof typeof rate;
+interface Currency {
+  unit: Unit;
+  amount: number;
+}
+
+const Currency = {
+  exchange: (currency: Currency, unit: Unit): Currency => {
+    const amount = (currency.amount / rate[currency.unit]) * rate[unit];
+
+    return { unit, amount };
+  },
+};
+*/
+//export { Currency };
+//Generics
+function makePair<Key, Value>(key: Key, value: Value){
+    return {key,value};
+}
+//interface of generics
+console.log(makePair("Alice","Momoi"));
+interface LinkedNode<Value>{
+    next?: LinkedNode<Value>;
+    value: Value;
+}
+//ジェネリクスインターフェースを使った関数。戻り値の型を書く。recursive functionなので。
+function getLast<Value>(node: LinkedNode<Value>):Value{
+    return node.next? getLast(node.next): node.value;
+}
+interface Creat<T>{
+    content: T;
+}
+let missingT: Creat<string> = {
+    content: "drgasfss"
+};
+class Secret<Key,Value>{
+    key: Key;
+    value: Value;
+    constructor(key: Key,value: Value){
+        this.key = key;
+        this.value = value;
+    }
+    getValue(key:Key): Value|undefined{
+        return key===this.key? this.value: undefined
+    }
+}
+const storage = new Secret("Alice","Midori");
+console.log(storage.getValue("eilxir"));
+
+//explicit type of generic class
+class CurriedCallback<T>{
+    #callback: (input: T)=>void;
+
+    constructor(callback: (input: T) =>void){
+        this.#callback = (input: T) =>{
+            console.log("Input:", input);
+            callback(input);
+        }
+        
+    }
+    call(input: T){
+        this.#callback(input);
+    }
+}
+let testZ = new CurriedCallback((input: string) =>{
+    console.log(input.length);
+});
+testZ.call("SHNioujaodi");
+//ジェネリッククラスの拡張
+/*class Quote<T>{
+    lines: T;
+    constructor(lines: T){
+        this.lines = lines;
+    }
+}
+class SpokenQuote extends Quote<string[]>{
+    speak(){
+        console.log(this.lines);
+    }
+}
+let testY = new SpokenQuote(["vanitas vanitatum. et omnia vanitas.","Kyrie eleison"]);
+console.log(testY.speak());
+*/
+//ジェネリックインターフェースの拡張
+interface ActingCredit<T>{
+    role:T;
+}
+class MoviePart implements ActingCredit<string>{
+    role: string;
+    speaking: boolean;
+    constructor(role: string,speaking: boolean){
+        this.speaking = speaking;
+        this.role = role;
+    }
+}
+const part1 = new MoviePart("Milla elixir",false);
+console.log(part1.role);
+//メソッドのジェネリクス
+class CreatePairFactory<Key>{
+    key: Key;
+    constructor(key: Key){
+        this.key = key;
+    }
+    createPair<V>(value: V){
+        return {key: this.key,value};
+    }
+}
+const factory = new CreatePairFactory("role");
+console.log(factory.createPair(10));
+//ジェネリック型エイリアス
+type CreatesValue<Input,Output> = (input: Input) => Output;
+let creator: CreatesValue<string,number>;
+//ジェネリックなタグ付き合併型
+type Result<Data> = FailureResult|SuccessfulResult<Data>;
+interface FailureResult{
+    error: Error;
+    succeeded: false;
+}
+interface SuccessfulResult<Data>{
+    data: Data;
+    succeeded: true;
+}
+function handleResult(result: Result<string>){
+    //type guard
+    if(result.succeeded){
+        console.log(`we did it! ${result.data}`);
+    }else{
+        console.error(`Awwww, ${result.error}`);
+    }
+}
+//ジェネリックのデフォルト型
+interface Quote<T = string>{
+    value: T;
+}
+let explicit2: Quote<number> = {value:123};
+
+let implicit: Quote = {value:"vanitas vanitatum"};
+
+interface KeyValuePair<Key, Value = Key>{
+    key: Key;
+    value: Value;
+}
+let allExplicit: KeyValuePair<string,number> = {
+    key:"Kyrie eleison",
+    value: 456,
+};
+let oneDefault: KeyValuePair<string> = {
+    key:"vanitas vanitatum",
+    value:"Kyrie eleison"
+};
+
+interface WithLength{
+    length: number;
+}
+//配列や文字列はlengthプロパティを持っているから、型パラメータTに割り当て可能。
+function logWithLength<T extends WithLength>(input: T){
+    console.log(`length: ${input.length}`);
+    return input;
+}
+logWithLength("vanitas vanitatum");
+//keyof extendsで制約付き型パラメータを実現する
+function get<T, Key extends keyof T>(container: T, key: Key){
+    return(container[key]);
+}
+const roles = {
+    favorite: "Fuego",
+    others: ["Almost Famous","Burn after reading","Nomadland"],
+};
+const favorite = get(roles,"favorite");
+const others = get(roles,"others");
+
+
+
